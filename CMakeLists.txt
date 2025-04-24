@@ -18,4 +18,10 @@ add_subdirectory(vendor/json)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
 
+add_library(${PROJECT_NAME}_lib ${SOURCES})
+target_link_libraries(${PROJECT_NAME}_lib PRIVATE nlohmann_json::nlohmann_json)
+
+add_subdirectory(vendor/googletest)
+add_subdirectory(tests)
+
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

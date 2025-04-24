@@ -2,6 +2,7 @@
 
 #include "Builder.hpp"
 #include "Unit.hpp"
+#include "DependencyGraph.hpp"
 
 #define VHDLMAKE_VERSION "0.1.2"
 
@@ -36,18 +37,20 @@ int main(int argc, char *argv[]) {
 
 
     vm::Builder builder;
+    vm::DependencyGraph graph;
 
     if(command == "build") {
-        builder.build(entity);
+        builder.build(entity, graph.get_update_list());
     } else if (command == "run") {
         if(argc != 3) {
             std::cout << "Please provide an entity to run" << std::endl;
             return EXIT_FAILURE;
         }
 
-        builder.build(entity);
+        builder.build(entity, graph.get_update_list());
         builder.run(entity);
     } else if(command == "clean") {
+        graph.invalidate();
         builder.clean();
     } else if (command == "info") {
         if(argc != 3) {
@@ -58,6 +61,8 @@ int main(int argc, char *argv[]) {
         vm::Unit unit = vm::Unit::from_file(entity);
         std::cout << unit << std::endl;
 
+    } else if(command == "graph") {
+       std::cout << graph.get_mermaid_url() << std::endl;
     } else {
         help();
         return EXIT_FAILURE;

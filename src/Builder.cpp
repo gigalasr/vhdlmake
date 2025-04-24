@@ -1,19 +1,18 @@
 #include "Builder.hpp"
 #include "DependencyGraph.hpp"
+#include "Constants.hpp"
 
 #include <filesystem>
 #include <iostream>
+
+
 
 namespace fs = std::filesystem;
 
 namespace vm {
     Builder::Builder() {
-        m_VcdDirectory = "vcd";
-        m_CacheFile = ".vhdlmake"; 
-        m_SourceDirectory = fs::current_path();
-
-        if(!fs::exists(m_VcdDirectory)) {
-            fs::create_directory(m_VcdDirectory);
+        if(!fs::exists(C_VCD_DIRECTORY)) {
+            fs::create_directory(C_VCD_DIRECTORY);
         }
     }
 
@@ -31,14 +30,11 @@ namespace vm {
 
     std::string Builder::cmd_run(const std::string& entity) {
         std::stringstream stream;
-        stream << "ghdl -r " << entity << " --vcd=" << m_VcdDirectory << "/" << entity << ".vcd";
+        stream << "ghdl -r " << entity << " --vcd=" << C_VCD_DIRECTORY << "/" << entity << ".vcd";
         return stream.str();
     }
 
-    void Builder::build(const std::string& entity) {
-        DependencyGraph graph(m_SourceDirectory, m_CacheFile);
-        std::vector<std::string> update_list = graph.get_update_list();
-
+    void Builder::build(const std::string& entity, const std::vector<std::string> update_list) {
         // No need to build if no files were changed
         if(update_list.empty()) {
             std::cout << "[INFO] No changes" << std::endl;
@@ -57,9 +53,6 @@ namespace vm {
             auto command = cmd_link(entity);
             system(command.c_str());
         }
-
-        // Save hashes to cache
-        graph.save_cache(m_CacheFile);
     }
 
     void Builder::run(const std::string& entity) {
@@ -69,7 +62,7 @@ namespace vm {
     }
 
     void Builder::clean() {
-        fs::recursive_directory_iterator working_dir (m_SourceDirectory);
+        fs::recursive_directory_iterator working_dir (fs::current_path());
         
         for(const auto& file : working_dir) {
             const auto extension = file.path().extension();
@@ -79,7 +72,10 @@ namespace vm {
             }
         }
 
-        fs::remove(m_CacheFile);
+        if(fs::exists(C_CACHE_FILE)) {
+            fs::remove(C_CACHE_FILE);
+            std::cout << "[DELETE] " << C_CACHE_FILE << std::endl;
+        }
 
         std::cout << "[INFO] Cleaned" << std::endl;
     }
