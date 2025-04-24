@@ -19,7 +19,7 @@ This is useful, because now the edges point directly to the files
 that need to be updated. Generating the correct compile commands is now as simple
 as building the partital DAG and running a topological sort on that.
 This approach is inspired by the [Tup Build System](https://gittup.org/tup/build_system_rules_and_algorithms.pdf).
-githu
+
 ### Usage
 ```bash
 vhdlmake build [entity] - builds project and optionaly elaborates <entity>
