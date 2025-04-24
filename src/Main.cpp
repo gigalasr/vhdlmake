@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Builder.hpp"
+#include "Unit.hpp"
 
 #define VHDLMAKE_VERSION "0.1.1"
 
@@ -36,7 +37,6 @@ int main(int argc, char *argv[]) {
     vm::Builder builder;
 
     if(command == "build") {
-        builder.prepare();
         builder.build(entity);
     } else if (command == "run") {
         if(argc != 3) {
@@ -48,6 +48,15 @@ int main(int argc, char *argv[]) {
         builder.run(entity);
     } else if(command == "clean") {
         builder.clean();
+    } else if (command == "info") {
+        if(argc != 3) {
+            std::cout << "Please provide a file to show info for" << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        vm::Unit unit = vm::Unit::from_file(entity);
+        std::cout << unit << std::endl;
+
     } else {
         help();
         return EXIT_FAILURE;

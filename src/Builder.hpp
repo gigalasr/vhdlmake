@@ -6,7 +6,6 @@ namespace vm {
     public: 
         Builder();
 
-        void prepare();
         void build(const std::string& entity);
         void run(const std::string& entity);
         void clean();
@@ -18,7 +17,6 @@ namespace vm {
 
         std::string m_CacheFile;
         std::string m_SourceDirectory;
-        std::string m_BinaryDirectory;
         std::string m_VcdDirectory;
     };
 

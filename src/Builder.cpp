@@ -8,17 +8,9 @@ namespace fs = std::filesystem;
 
 namespace vm {
     Builder::Builder() {
-        m_BinaryDirectory = "bin";
         m_VcdDirectory = "vcd";
         m_CacheFile = ".vhdlmake"; 
         m_SourceDirectory = fs::current_path();
-    }
-
-    void Builder::prepare() {
-        // Make sure buid directory exists
-        if(!fs::exists(m_BinaryDirectory)) {
-            fs::create_directory(m_BinaryDirectory);
-        }
 
         if(!fs::exists(m_VcdDirectory)) {
             fs::create_directory(m_VcdDirectory);
@@ -64,11 +56,6 @@ namespace vm {
             std::cout << "[LINK] " << entity << std::endl;
             auto command = cmd_link(entity);
             system(command.c_str());
-
-            // Move executable to bianry dir
-            if(fs::exists(entity)) {
-                fs::rename(entity, m_BinaryDirectory + "/" + entity);
-            }
         }
 
         // Save hashes to cache
@@ -85,17 +72,16 @@ namespace vm {
         fs::recursive_directory_iterator working_dir (m_SourceDirectory);
         
         for(const auto& file : working_dir) {
-            if(file.path().extension() == ".vcd") {
-                fs::remove(file);
-                std::cout << "[DELETE] " << file << std::endl;
-            } else if(file.path().extension() == ".cf") {
+            const auto extension = file.path().extension();
+            if(extension == ".vcd" || extension == ".cf" || extension == ".o") {
                 fs::remove(file);
                 std::cout << "[DELETE] " << file << std::endl;
             }
         }
 
+        fs::remove(m_CacheFile);
+
         std::cout << "Cleaned" << std::endl;
-        prepare();
     }
 
 } // namespace vm

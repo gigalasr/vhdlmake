@@ -10,6 +10,7 @@ set(SOURCES
     "src/Main.cpp"
     "src/DependencyGraph.cpp"
     "src/Builder.cpp"
+    "src/Unit.cpp"
 )
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(vendor/json)

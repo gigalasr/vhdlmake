@@ -1,16 +1,20 @@
 #include "DependencyGraph.hpp"
+#include "Unit.hpp"
 
 #include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <nlohmann/json.hpp>
-
+#include <queue>
 #include <fstream>
+#include <stack>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 namespace vm {
+    Node::Node(const Unit& unit) : data(unit) { }
+
     DependencyGraph::DependencyGraph(const std::string& directory, const std::string& cache_file) {
         build_dag(directory, cache_file);
     }
@@ -30,98 +34,100 @@ namespace vm {
                 continue;
             }
 
-            // Read file
-            std::ifstream file(file_path.path());
-            std::stringstream buffer;
-            buffer << file.rdbuf();
-
-            // Convert path to relative path
+            // Directory iterator uses absolute paths, so we convert them to relative here
             std::string relative_path = fs::relative(file_path, directory).string();
 
-            // Parse File
-            UnitData data = parse_unit(buffer);  
+            Unit unit = Unit::from_file(relative_path);
 
-            // Generate Hash
-            std::hash<std::string> hasher;
-            size_t hash = hasher(buffer.str());
+            // Associate the file path with the defined entities
+            for(const auto& entity : unit.definitions)  {
+                this->ident_to_file[entity] = relative_path;
+            }
 
-            // Add entities to lookup
-            for(const auto& entity : data.Entities)  {
-                this->entity_to_file[entity] = relative_path;
-            } 
-
-            // Add Node
-            this->dag[relative_path] = Unit {
-                .Path = relative_path,
-                .Dependants = {},
-                .Components = data.Components,
-                .Hash = hash
-            };
+            // Add Node to DAG
+            dag[relative_path] = std::make_shared<Node>(unit);
 
             // Add file to change list, if hashes don't match
-            if(hash != cache[relative_path]) {
+            if(unit.hash != cache[relative_path]) {
                 std::cout << relative_path << " changed" << std::endl;
-                this->changed_units.push_back(&this->dag[relative_path]);
+                this->changed_units.emplace(dag[relative_path]);
             }
         }
 
         // Resolve dependants
-        for(const auto& unit : dag) {
-            for(const auto& dependency : unit.second.Components) {
-                const std::string& dep_file_name = this->entity_to_file[dependency];
-                dag[dep_file_name].Dependants.push_back((Unit*)&unit.second);
+        for(const auto& [path, unit] : dag) {
+            for(const auto& dependency : unit->data.references) {
+                if(ident_to_file.find(dependency) == ident_to_file.end()) {
+                    std::cout << "[WARN] Unresolved Dependency '" << dependency << "' in file " << path << std::endl;
+                    continue;
+                }
+
+                const std::string& dep_file_name = this->ident_to_file[dependency];
+                dag[dep_file_name]->dependants.push_back(unit);
             }
+
         }
     }
 
-    UnitData DependencyGraph::parse_unit(std::stringstream& unit) const {
-        UnitData data;
+    static void insert_into_list(std::vector<std::shared_ptr<Node>>&list, const std::shared_ptr<Node>& to_insert) {
+        for(int i = 0; i < list.size(); i++) {
 
-        // Parse file
-        std::string word;
-        while (unit >> word) {
-            std::transform(word.begin(), word.end(), word.begin(), ::tolower);
-            if (word == "entity") {
-                std::string entity_name;
-                unit >> entity_name;
-                data.Entities.push_back(entity_name);
-            } else if (word == "component") {
-                std::string component_name;
-                unit >> component_name;  
-                data.Components.push_back(component_name);
+            // Insert before the first dependant
+            for(int j = 0; j < to_insert->dependants.size(); j++) {
+                if(list[i] == to_insert->dependants[j]) {
+                    list.insert(list.begin() + i, to_insert);
+                    return;
+                }
             }
         }
 
-        return data;
-    }
-
-    static void add_dependencies_recursive(std::vector<std::string>& list, Unit* current_unit, std::unordered_map<std::string, bool>& visited) {        
-        for(Unit* unit : current_unit->Dependants) {
-            if(visited[unit->Path]) {
-                continue;
-            }
-            
-            list.push_back(unit->Path);
-            visited[unit->Path] = true;
-
-            add_dependencies_recursive(list, unit, visited);
-        }
+        list.push_back(to_insert);
     }
 
     std::vector<std::string> DependencyGraph::get_update_list() {
-        std::vector<std::string> list;
+        // Remove all units from the changed_list that appear as a dependant
+        // in a unit that was changed
+        // We do this to avoid compiling a in the wrong order
+        std::unordered_set<std::shared_ptr<Node>> cu_tmp(changed_units);
+        for(const auto& node : cu_tmp) {
+            for(const auto& dep : node->dependants) {
+                changed_units.erase(dep);
+            }
+        }
+        
+        std::vector<std::shared_ptr<Node>> list;
         std::unordered_map<std::string, bool> visited;
+        std::stack<std::shared_ptr<Node>> to_visit;
 
         for(const auto& unit : changed_units) {
-            if(visited[unit->Path]) {
+            to_visit.push(unit);
+        }
+
+        while(!to_visit.empty()) {
+            std::shared_ptr<Node> unit = to_visit.top();
+            to_visit.pop();
+
+            if(visited[unit->data.path]) {
                 continue;
             }
 
-            list.push_back(unit->Path);
-            add_dependencies_recursive(list, unit, visited);
+            for(const auto& dep : unit->dependants) {
+                if(!visited[dep->data.path]) {
+                    to_visit.push(dep);
+                }
+            }
+
+            insert_into_list(list, unit);
+            visited[unit->data.path] = true;
         }
 
-        return list;
+        std::vector<std::string> final_list;
+        final_list.reserve(list.size());
+        std::transform(list.begin(), list.end(), std::back_inserter(final_list), [](const std::shared_ptr<Node>& n) {
+            return n->data.path;
+        });
+
+        return final_list;
     }
 
     void DependencyGraph::save_cache(const std::string& cache_file) const {
@@ -134,20 +140,24 @@ namespace vm {
 
         json data;
         for(const auto& unit : this->dag) {
-            data[unit.first] = unit.second.Hash;
+            data[unit.first] = unit.second->data.hash;
         }
 
         file << data;
     }
 
     void DependencyGraph::debug_print() const {
-        for(const auto& node : this->dag) {
-            std::cout << node.first << std::endl;
-            std::cout << std::setw(4) << " path: "<< node.second.Path << std::endl;
+        std::cout << "Ident to File: " << std::endl;
+        for(const auto& node : this->ident_to_file) {
+            std::cout << node.first << " -> " << node.second << std::endl;
+        }
 
+        std::cout << std::endl << "Dag Data: " << std::endl;
+        for(const auto& node : this->dag) {
+            std::cout << std::setw(4) << " path: "<< node.second->data.path << std::endl;
             std::cout << std::setw(4) << "dependants: " << std::endl;
-            for(const auto& dependant : node.second.Dependants) {
-                std::cout << "  " << dependant->Path << std::endl;
+            for(const auto& dependant : node.second->dependants) {
+                std::cout << "  " << dependant->data.path << std::endl;
             }
 
             std::cout << std::endl;

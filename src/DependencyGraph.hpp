@@ -1,21 +1,17 @@
+#include "Unit.hpp"
+
 #include <string>
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <unordered_set>
 
 namespace vm {
-    struct Unit {
-        std::string Path;
-        std::vector<Unit*> Dependants;
-        std::vector<std::string> Components;
-        size_t Hash;
+    struct Node {
+        explicit Node(const Unit& unit);
+        std::vector<std::shared_ptr<Node>> dependants;
+        Unit data;
     };
-
-    struct UnitData {
-        std::vector<std::string> Entities;
-        std::vector<std::string> Components;
-    };
-
 
     class DependencyGraph {
     public:
@@ -28,10 +24,9 @@ namespace vm {
 
     private:
         void build_dag(const std::string& directory, const std::string& cache_file);
-        UnitData parse_unit(std::stringstream& unit) const;
 
-        std::unordered_map<std::string, Unit> dag;
-        std::unordered_map<std::string, std::string> entity_to_file;
-        std::vector<Unit*> changed_units;
+        std::unordered_map<std::string, std::shared_ptr<Node>> dag;
+        std::unordered_map<std::string, std::string> ident_to_file;
+        std::unordered_set<std::shared_ptr<Node>> changed_units;
     };
 } // namespace vm
