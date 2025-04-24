@@ -11,6 +11,7 @@ vhdlmake build [entity] - builds project and optionaly elaborates <entity>
 vhdlmake run   <entity> - builds project and runs <entity>
 vhdlmake info  <entity> - show info for <entity>
 vhdlmake graph          - get dependency graph as mermaid url
+vhdlmake graph*         - get partial dependency graph as mermaid url (only updated files and deps)
 ```
 
 ### Clone and Build

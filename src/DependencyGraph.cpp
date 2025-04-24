@@ -17,14 +17,10 @@ namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 namespace vm {
-    Node::Node(const Unit& unit) : data(unit) { }
+    Node::Node(const Unit& unit) : data(unit), in(0) { }
 
     DependencyGraph::DependencyGraph() {
         build_dag(fs::current_path());
-    }
-
-    DependencyGraph::~DependencyGraph() {
-        save_cache();
     }
 
     void DependencyGraph::build_dag(const std::string& directory) {
@@ -75,8 +71,28 @@ namespace vm {
                 dag[dep_file_name]->dependants.push_back(unit);
                 unit->in++;
             }
-
         }
+
+        // Build Partial DAG which only contains files that were changed
+        for(const auto& unit : changed_units) {
+           build_partial_dag(unit);
+        }
+
+    }
+
+    void DependencyGraph::build_partial_dag(const std::shared_ptr<Node>& unit) {
+           if(partial_dag.find(unit->data.path) != partial_dag.end()) {
+                return;
+            }
+
+            partial_dag[unit->data.path] = std::make_shared<Node>(unit->data);
+            
+            for(const auto& dep : dag[unit->data.path]->dependants) {
+                build_partial_dag(dep);
+                
+                partial_dag[unit->data.path]->dependants.emplace_back(partial_dag[dep->data.path]);     
+                partial_dag[dep->data.path]->in++;
+            }
     }
     
     std::vector<std::string> DependencyGraph::get_update_list() {
@@ -85,7 +101,7 @@ namespace vm {
         std::stack<std::shared_ptr<Node>> to_visit;
         
         // Enqueue all node with no incoming endges
-        for(const auto& node : changed_units) {
+        for(const auto& [path, node] : partial_dag) {
             if(node->in == 0) {
                 to_visit.push(node);
             }
@@ -133,7 +149,7 @@ namespace vm {
         }
 
         std::cout << std::endl << "Dag Data: " << std::endl;
-        for(const auto& node : this->dag) {
+        for(const auto& node : this->partial_dag) {
             std::cout << std::setw(4) << "Path: "<< node.second->data.path << std::endl;
             std::cout << std::setw(4) << "Dependants: " << std::endl;
             for(const auto& dependant : node.second->dependants) {
@@ -145,7 +161,9 @@ namespace vm {
         }
     }
 
-    std::string DependencyGraph::get_mermaid_url() const {
+    std::string DependencyGraph::get_mermaid_url(bool partial) const {
+        auto& p_dag = partial ? partial_dag : dag;
+ 
         std::stringstream d;
         d << "{ \"code\": \"%%{init: {\\\"flowchart\\\": {\\\"defaultRenderer\\\": \\\"elk\\\"}} }%%\\n";
         d << "flowchart BT\\n";
@@ -153,7 +171,7 @@ namespace vm {
         d << "classDef c stroke:cyan\\n";
         d << "classDef t stroke:orange\\n";
 
-        for(const auto& [path, unit] : dag) {
+        for(const auto& [path, unit] : p_dag) {
             d << unit->data.path;
             if(unit->data.path.starts_with("components")) {
                 d << ":::c";
@@ -177,9 +195,5 @@ namespace vm {
 
         return url.str();
     } 
-
-    void DependencyGraph::invalidate() {
-        this->dag.clear();
-    }
     
 } // namespace vm

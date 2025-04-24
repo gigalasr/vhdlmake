@@ -12,6 +12,7 @@ static void help() {
     std::cout << "vhdlmake run <entity>   - builds project and runs <entity>"  << std::endl;
     std::cout << "vhdlmake info <entity>  - show info for <entity>"  << std::endl;
     std::cout << "vhdlmake graph          - get dependency graph as mermaid url"  << std::endl;
+    std::cout << "vhdlmake graph*          - get partial dependency graph as mermaid url (only updated files and deps)"  << std::endl;
 }
 
 
@@ -42,6 +43,7 @@ int main(int argc, char *argv[]) {
 
     if(command == "build") {
         builder.build(entity, graph.get_update_list());
+        graph.save_cache();
     } else if (command == "run") {
         if(argc != 3) {
             std::cout << "Please provide an entity to run" << std::endl;
@@ -50,8 +52,8 @@ int main(int argc, char *argv[]) {
 
         builder.build(entity, graph.get_update_list());
         builder.run(entity);
+        graph.save_cache();
     } else if(command == "clean") {
-        graph.invalidate();
         builder.clean();
     } else if (command == "info") {
         if(argc != 3) {
@@ -63,7 +65,9 @@ int main(int argc, char *argv[]) {
         std::cout << unit << std::endl;
 
     } else if(command == "graph") {
-       std::cout << graph.get_mermaid_url() << std::endl;
+       std::cout << graph.get_mermaid_url(false) << std::endl;
+    } else if(command == "graph*") {
+       std::cout << graph.get_mermaid_url(true) << std::endl;
     } else {
         help();
         return EXIT_FAILURE;
