@@ -43,7 +43,7 @@ namespace vm {
                 break;
             }
         }
-        
+
         if(first == 0 && last == 0) {
             return ref;
         } 
@@ -119,12 +119,12 @@ namespace vm {
     std::ostream& operator<< (std::ostream& stream, const Unit& unit) {
         stream << "File: " << unit.path << std::endl;
 
-        stream << "References" << std::endl;
+        stream << "References (" << unit.references.size() << ")" << std::endl;
         for(const auto& x : unit.references) {
             stream << "    " << x << std::endl;
         }
 
-        stream << "Definitions" << std::endl;
+        stream << "Definitions (" << unit.definitions.size() << ")" << std::endl;
         for(const auto& x : unit.definitions) {
             stream << "    " << x << std::endl;
         }

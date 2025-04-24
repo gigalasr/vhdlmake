@@ -9,7 +9,6 @@ namespace vm {
     struct Unit {
         std::unordered_set<std::string> references;
         std::vector<std::string> definitions;
-
         std::string path;
         size_t hash;
 

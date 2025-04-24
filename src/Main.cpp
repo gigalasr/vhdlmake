@@ -3,12 +3,13 @@
 #include "Builder.hpp"
 #include "Unit.hpp"
 
-#define VHDLMAKE_VERSION "0.1.1"
+#define VHDLMAKE_VERSION "0.1.2"
 
 static void help() {
     std::cout << "List of commands:" << std::endl;
-    std::cout << "vhdlmake build [entity] - builds entire project and optionaly links everything into <entity>" << std::endl;
-    std::cout << "vhdlmake run <entity> - builds entire project and runs <entity>"  << std::endl;
+    std::cout << "vhdlmake build [entity] - builds project and optionaly elaborates <entity>" << std::endl;
+    std::cout << "vhdlmake run <entity>   - builds project and runs <entity>"  << std::endl;
+    std::cout << "vhdlmake info <entity>  - show info for <entity>"  << std::endl;
 }
 
 
@@ -18,7 +19,7 @@ int main(int argc, char *argv[]) {
     #ifdef DEBUG
         std::cout << " DEBUG BUILD " << std::endl << std::endl;;
     #else
-        std::cout << " RELEASE BUILD " << std::endl << std::endl;;
+        std::cout << std::endl << std::endl;;
     #endif
 
     if(argc < 2) {

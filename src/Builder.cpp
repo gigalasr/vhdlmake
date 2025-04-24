@@ -41,7 +41,7 @@ namespace vm {
 
         // No need to build if no files were changed
         if(update_list.empty()) {
-            std::cout << "No changes" << std::endl;
+            std::cout << "[INFO] No changes" << std::endl;
         }
 
         // Analyze all files
@@ -81,7 +81,7 @@ namespace vm {
 
         fs::remove(m_CacheFile);
 
-        std::cout << "Cleaned" << std::endl;
+        std::cout << "[INFO] Cleaned" << std::endl;
     }
 
 } // namespace vm
