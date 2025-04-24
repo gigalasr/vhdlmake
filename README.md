@@ -10,6 +10,7 @@ and compile only the necerssary files when a or multiple files were changed.
 vhdlmake build [entity] - builds project and optionaly elaborates <entity>
 vhdlmake run   <entity> - builds project and runs <entity>
 vhdlmake info  <entity> - show info for <entity>
+vhdlmake graph          - get dependency graph as mermaid url
 ```
 
 ### Clone and Build

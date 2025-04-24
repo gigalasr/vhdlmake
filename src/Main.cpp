@@ -11,6 +11,7 @@ static void help() {
     std::cout << "vhdlmake build [entity] - builds project and optionaly elaborates <entity>" << std::endl;
     std::cout << "vhdlmake run <entity>   - builds project and runs <entity>"  << std::endl;
     std::cout << "vhdlmake info <entity>  - show info for <entity>"  << std::endl;
+    std::cout << "vhdlmake graph          - get dependency graph as mermaid url"  << std::endl;
 }
 
 
