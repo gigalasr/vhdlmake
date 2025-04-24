@@ -1,9 +1,24 @@
-# vhdl make
+# vhdlmake
 
-A simple build system made especialy for my uni vhdl projects.
+<div align="center">
 
-This build system can automaticaly infer the dependencies between vhdl files
-and compile only the necerssary files when a or multiple files were changed.
+![Graph](doc/graph.png)
+
+A simple build system made for my uni vhdl projects.
+
+</div>
+
+<br>
+
+This build system automaticaly infers the dependencies between vhdl files
+and compiles only the necerssary files when a or multiple files were changed.
+It builds a DAG and a partial DAG based on the updated files and uses these to
+determine which files need to be rebuilt/analysed. In comparison to make, vhdlmake
+inverts its DAG. Instead of "listing" the dependencies, each node lists its dependants.
+This is useful, because now the edges point directly to the files
+that need to be updated. Generating the correct compile commands is now as simple
+as building the partital DAG and running a topological sort on that.
+This approach is inspired by the [Tup Build System](https://gittup.org/tup/build_system_rules_and_algorithms.pdf).
 
 ### Usage
 ```bash
