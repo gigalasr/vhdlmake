@@ -69,19 +69,19 @@ namespace vm {
         }
     }
 
-    static void insert_into_list(std::vector<std::shared_ptr<Node>>&list, const std::shared_ptr<Node>& to_insert) {
+    static void insert_into_list(std::vector<std::string>&list, const std::shared_ptr<Node>& to_insert) {
         for(int i = 0; i < list.size(); i++) {
 
             // Insert before the first dependant
             for(int j = 0; j < to_insert->dependants.size(); j++) {
-                if(list[i] == to_insert->dependants[j]) {
-                    list.insert(list.begin() + i, to_insert);
+                if(list[i] == to_insert->dependants[j]->data.path) {
+                    list.insert(list.begin() + i, to_insert->data.path);
                     return;
                 }
             }
         }
 
-        list.push_back(to_insert);
+        list.push_back(to_insert->data.path);
     }
 
     std::vector<std::string> DependencyGraph::get_update_list() {
@@ -95,7 +95,7 @@ namespace vm {
             }
         }
         
-        std::vector<std::shared_ptr<Node>> list;
+        std::vector<std::string> list;
         std::unordered_map<std::string, bool> visited;
         std::stack<std::shared_ptr<Node>> to_visit;
 
@@ -121,13 +121,7 @@ namespace vm {
             visited[unit->data.path] = true;
         }
 
-        std::vector<std::string> final_list;
-        final_list.reserve(list.size());
-        std::transform(list.begin(), list.end(), std::back_inserter(final_list), [](const std::shared_ptr<Node>& n) {
-            return n->data.path;
-        });
-
-        return final_list;
+        return list;
     }
 
     void DependencyGraph::save_cache(const std::string& cache_file) const {
