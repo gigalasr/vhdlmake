@@ -54,7 +54,7 @@ namespace vm {
 
             // Add file to change list, if hashes don't match
             if(unit.hash != cache[relative_path]) {
-                std::cout << relative_path << " changed" << std::endl;
+                //std::cerr << relative_path << " changed" << std::endl;
                 this->changed_units.emplace(dag[relative_path]);
             }
         }
@@ -63,7 +63,7 @@ namespace vm {
         for(const auto& [path, unit] : dag) {
             for(const auto& dependency : unit->data.references) {
                 if(ident_to_file.find(dependency) == ident_to_file.end()) {
-                    std::cout << "[WARN] Unresolved Dependency '" << dependency << "' in file " << path << std::endl;
+                    std::cerr << "[WARN] Unresolved Dependency '" << dependency << "' in file " << path << std::endl;
                     continue;
                 }
 
@@ -97,7 +97,6 @@ namespace vm {
     
     std::vector<std::string> DependencyGraph::get_update_list() {
         std::vector<std::string> list;
-        std::unordered_map<std::string, bool> visited;
         std::stack<std::shared_ptr<Node>> to_visit;
         
         // Enqueue all node with no incoming endges
@@ -160,6 +159,42 @@ namespace vm {
             std::cout << std::endl;
         }
     }
+
+    std::vector<std::string> DependencyGraph::get_minimal_subset() {
+        std::vector<std::string> result;
+
+        system("git add .");
+        std::vector<std::string> files = command_get_lines("git diff --name-only --cached");
+
+        std::unordered_map<std::string, bool> visited;
+        std::stack<std::string> to_visit;
+      
+        for(const auto& file : files) {
+            if(file.ends_with(".vhdl")) {
+                to_visit.emplace(file);
+            }
+        }
+
+        while(!to_visit.empty()) {
+            std::string file = to_visit.top();
+            to_visit.pop();
+
+            if(visited[file]) {
+                continue;
+            }
+
+            result.push_back(file);
+
+            for(const auto& dep : dag[file]->data.references) {
+                to_visit.emplace(ident_to_file[dep]);
+            }
+
+            visited[file] = true;
+        }
+
+        return result;
+    }
+
 
     std::string DependencyGraph::get_mermaid_url(bool partial) const {
         auto& p_dag = partial ? partial_dag : dag;

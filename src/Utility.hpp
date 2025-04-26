@@ -1,4 +1,6 @@
 #include <string>
+#include <vector>
+#include <iostream>
 
 namespace vm
 {
@@ -21,5 +23,28 @@ namespace vm
         if (valb>-6) out.push_back(b[((val<<8)>>(valb+8))&0x3F]);
         while (out.size()%4) out.push_back('=');
         return out;
+    }
+
+    static std::vector<std::string> command_get_lines(const std::string& command) {
+        FILE* pipe = popen(command.c_str(), "r");
+        if (!pipe) {
+            throw std::runtime_error("popen() failed!");
+        }
+
+        char* line = nullptr;
+        size_t len = 0;
+        ssize_t nread = 0;
+        std::vector<std::string> lines;
+
+        while((nread = getline(&line, &len, pipe) != EOF)) {
+            std::string tmp(line);
+            tmp = tmp.substr(0, tmp.find('\n'));
+            lines.emplace_back(tmp);
+            
+        }
+
+        fclose(pipe);
+        free(line);
+        return lines;
     }
 } // namespace vm

@@ -20,6 +20,7 @@ namespace vm {
         DependencyGraph();
 
         std::vector<std::string> get_update_list();
+        std::vector<std::string> get_minimal_subset();
 
         void save_cache() const;
         void debug_print() const;

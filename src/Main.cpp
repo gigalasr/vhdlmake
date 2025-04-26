@@ -12,17 +12,18 @@ static void help() {
     std::cout << "vhdlmake run <entity>   - builds project and runs <entity>"  << std::endl;
     std::cout << "vhdlmake info <entity>  - show info for <entity>"  << std::endl;
     std::cout << "vhdlmake graph          - get dependency graph as mermaid url"  << std::endl;
-    std::cout << "vhdlmake graph*          - get partial dependency graph as mermaid url (only updated files and deps)"  << std::endl;
+    std::cout << "vhdlmake graph*         - get partial dependency graph as mermaid url (only updated files and deps)"  << std::endl;
+    std::cout << "vhdlmake subset         - get list of changed files and their dependencies"  << std::endl;
 }
 
 
 int main(int argc, char *argv[]) {
-    std::cout << "vhdlmake v" << VHDLMAKE_VERSION;
+    std::cerr << "vhdlmake v" << VHDLMAKE_VERSION;
 
     #ifdef DEBUG
-        std::cout << " DEBUG BUILD " << std::endl << std::endl;;
+        std::cerr << " DEBUG BUILD " << std::endl;
     #else
-        std::cout << std::endl << std::endl;;
+        std::cerr << std::endl;
     #endif
 
     if(argc < 2) {
@@ -68,6 +69,10 @@ int main(int argc, char *argv[]) {
        std::cout << graph.get_mermaid_url(false) << std::endl;
     } else if(command == "graph*") {
        std::cout << graph.get_mermaid_url(true) << std::endl;
+    } else if(command == "subset") {
+        for(const auto& changed : graph.get_minimal_subset()) {
+            std::cout << changed << " ";
+        } std::cout << std::endl;
     } else {
         help();
         return EXIT_FAILURE;

@@ -27,6 +27,7 @@ vhdlmake run   <entity> - builds project and runs <entity>
 vhdlmake info  <entity> - show info for <entity>
 vhdlmake graph          - get dependency graph as mermaid url
 vhdlmake graph*         - get partial dependency graph as mermaid url (only updated files and deps)
+vhdlmake subset         - get list of changed files and their dependencies
 ```
 
 ### Clone and Build

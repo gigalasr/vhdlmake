@@ -37,26 +37,26 @@ namespace vm {
     void Builder::build(const std::string& entity, const std::vector<std::string> update_list) {
         // No need to build if no files were changed
         if(update_list.empty()) {
-            std::cout << "[INFO] No changes" << std::endl;
+            std::cerr << "[INFO] No changes" << std::endl;
         }
 
         // Analyze all files
         for(const auto& unit : update_list) {
-            std::cout << "[COMPILE] " << unit << std::endl;
+            std::cerr << "[COMPILE] " << unit << std::endl;
             auto command = cmd_compile(unit);
             system(command.c_str());
         }
 
         // Link final entity if needed 
         if(entity != "") {
-            std::cout << "[LINK] " << entity << std::endl;
+            std::cerr << "[LINK] " << entity << std::endl;
             auto command = cmd_link(entity);
             system(command.c_str());
         }
     }
 
     void Builder::run(const std::string& entity) {
-        std::cout << "[RUN] " << entity << std::endl;
+        std::cerr << "[RUN] " << entity << std::endl;
         auto command = cmd_run(entity);
         system(command.c_str());
     }
@@ -68,16 +68,16 @@ namespace vm {
             const auto extension = file.path().extension();
             if(extension == ".vcd" || extension == ".cf" || extension == ".o") {
                 fs::remove(file);
-                std::cout << "[DELETE] " << file << std::endl;
+                std::cerr << "[DELETE] " << file << std::endl;
             }
         }
 
         if(fs::exists(C_CACHE_FILE)) {
             fs::remove(C_CACHE_FILE);
-            std::cout << "[DELETE] " << C_CACHE_FILE << std::endl;
+            std::cerr << "[DELETE] " << C_CACHE_FILE << std::endl;
         }
 
-        std::cout << "[INFO] Cleaned" << std::endl;
+        std::cerr << "[INFO] Cleaned" << std::endl;
     }
 
 } // namespace vm
