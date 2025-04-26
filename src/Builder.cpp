@@ -18,19 +18,19 @@ namespace vm {
 
     std::string Builder::cmd_compile(const std::string& file) {
         std::stringstream stream;
-        stream << "ghdl -a " << file;
+        stream << "ghdl -a --std=08 " << file;
         return stream.str();
     }
 
     std::string Builder::cmd_link(const std::string& entity) {
         std::stringstream stream;
-        stream << " ghdl -e " << entity;
+        stream << " ghdl -e --std=08 " << entity;
         return stream.str();
     }
 
     std::string Builder::cmd_run(const std::string& entity) {
         std::stringstream stream;
-        stream << "ghdl -r " << entity << " --vcd=" << C_VCD_DIRECTORY << "/" << entity << ".vcd";
+        stream << "ghdl -r --std=08 " << entity << " --vcd=" << C_VCD_DIRECTORY << "/" << entity << ".vcd";
         return stream.str();
     }
 
