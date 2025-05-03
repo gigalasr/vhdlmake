@@ -61,6 +61,8 @@ namespace vm {
         };
 
         std::vector<std::string> tokens = tokenize(buffer);
+        if(tokens.size() == 0) { return unit; }
+
 
         ParserState state = ParserState::TOP_LEVEL;
         for(int i = 0; i < tokens.size() - 1; i++) {
