@@ -10,6 +10,15 @@
 namespace fs = std::filesystem;
 
 namespace vm {
+    static int execute_command(const std::string& command) {
+        int ret = system(command.c_str());
+        if(!WIFEXITED(ret)) {
+            return 1;
+        } else {
+            return WEXITSTATUS(ret);
+        }
+    }
+
     Builder::Builder() {
         if(!fs::exists(C_VCD_DIRECTORY)) {
             fs::create_directory(C_VCD_DIRECTORY);
@@ -34,7 +43,7 @@ namespace vm {
         return stream.str();
     }
 
-    void Builder::build(const std::string& entity, const std::vector<std::string> update_list) {
+    int Builder::build(const std::string& entity, const std::vector<std::string> update_list) {
         // No need to build if no files were changed
         if(update_list.empty()) {
             std::cerr << "[INFO] No changes" << std::endl;
@@ -44,24 +53,32 @@ namespace vm {
         for(const auto& unit : update_list) {
             std::cerr << "[COMPILE] " << unit << std::endl;
             auto command = cmd_compile(unit);
-            system(command.c_str());
+            int ret = execute_command(command);
+            if(ret) {
+                return ret;
+            }
         }
 
         // Link final entity if needed 
         if(entity != "") {
             std::cerr << "[LINK] " << entity << std::endl;
             auto command = cmd_link(entity);
-            system(command.c_str());
+            int ret = execute_command(command);
+            if(ret) {
+                return ret;
+            }
         }
+
+        return 0;
     }
 
-    void Builder::run(const std::string& entity) {
+    int Builder::run(const std::string& entity) {
         std::cerr << "[RUN] " << entity << std::endl;
         auto command = cmd_run(entity);
-        system(command.c_str());
+        return execute_command(command);
     }
 
-    void Builder::clean() {
+    int Builder::clean() {
         fs::recursive_directory_iterator working_dir (fs::current_path());
         
         for(const auto& file : working_dir) {
@@ -78,6 +95,8 @@ namespace vm {
         }
 
         std::cerr << "[INFO] Cleaned" << std::endl;
+
+        return 0;
     }
 
 } // namespace vm

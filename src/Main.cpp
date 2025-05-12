@@ -43,7 +43,10 @@ int main(int argc, char *argv[]) {
     vm::DependencyGraph graph;
 
     if(command == "build") {
-        builder.build(entity, graph.get_update_list());
+        if(builder.build(entity, graph.get_update_list())) {
+            return EXIT_FAILURE;
+        }
+
         graph.save_cache();
     } else if (command == "run") {
         if(argc != 3) {
@@ -51,11 +54,17 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
-        builder.build(entity, graph.get_update_list());
-        builder.run(entity);
+        if(builder.build(entity, graph.get_update_list())) {
+            return EXIT_FAILURE;
+        }
+
+        if(builder.run(entity)) {
+            return EXIT_FAILURE;
+        }
+
         graph.save_cache();
     } else if(command == "clean") {
-        builder.clean();
+        return builder.clean();
     } else if (command == "info") {
         if(argc != 3) {
             std::cout << "Please provide a file to show info for" << std::endl;

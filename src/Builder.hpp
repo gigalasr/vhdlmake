@@ -6,9 +6,9 @@ namespace vm {
     public: 
         Builder();
 
-        void build(const std::string& entity, const std::vector<std::string> update_list);
-        void run(const std::string& entity);
-        void clean();
+        int build(const std::string& entity, const std::vector<std::string> update_list);
+        int run(const std::string& entity);
+        int clean();
 
     private:
         std::string cmd_compile(const std::string& file);
