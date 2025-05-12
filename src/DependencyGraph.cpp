@@ -185,6 +185,12 @@ namespace vm {
 
             result.push_back(file);
 
+            if(dag.find(file) == dag.end()) {
+                std::cerr << "[WARN] Could not find file " << file << std::endl;
+                visited[file] = true;
+                continue;
+            }
+
             for(const auto& dep : dag[file]->data.references) {
                 to_visit.emplace(ident_to_file[dep]);
             }
