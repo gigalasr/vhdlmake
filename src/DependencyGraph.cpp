@@ -213,6 +213,10 @@ namespace vm {
         d << "classDef t stroke:orange\\n";
 
         for(const auto& [path, unit] : p_dag) {
+            if(unit->data.path.contains("constant_package")) {
+                continue;
+            }
+
             d << unit->data.path;
             if(unit->data.path.contains("components")) {
                 d << ":::c";
