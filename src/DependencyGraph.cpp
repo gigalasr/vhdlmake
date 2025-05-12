@@ -207,7 +207,7 @@ namespace vm {
  
         std::stringstream d;
         d << "{ \"code\": \"%%{init: {\\\"flowchart\\\": {\\\"defaultRenderer\\\": \\\"elk\\\"}} }%%\\n";
-        d << "flowchart BT\\n";
+        d << "flowchart LR\\n";
         d << "classDef p stroke:green\\n";
         d << "classDef c stroke:cyan\\n";
         d << "classDef t stroke:orange\\n";
