@@ -214,11 +214,11 @@ namespace vm {
 
         for(const auto& [path, unit] : p_dag) {
             d << unit->data.path;
-            if(unit->data.path.starts_with("components")) {
+            if(unit->data.path.contains("components")) {
                 d << ":::c";
-            } else if(unit->data.path.starts_with("testbenches")) {
+            } else if(unit->data.path.contains("testbenches")) {
                 d << ":::t";
-            } else if(unit->data.path.starts_with("packages")) {
+            } else if(unit->data.path.contains("packages")) {
                 d << ":::p";
             }
             d << "\\n";
