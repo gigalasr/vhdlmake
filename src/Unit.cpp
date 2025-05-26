@@ -12,6 +12,8 @@ namespace vm {
         PACKAGE_DECL,
         ARCH_DECL,
         ARCH_STATE,
+        PROCEDURE_DECL,
+        PROCEDURE_BODY
     };
 
     static std::stringstream read_file(const std::string& path) {
@@ -98,7 +100,9 @@ namespace vm {
                     }
                     break;
                 case ParserState::ARCH_DECL:
-                    if(a == "begin") {
+                    if(a == "procedure") {
+                        state = ParserState::PROCEDURE_DECL;
+                    } else if(a == "begin") {
                         state = ParserState::ARCH_STATE;
                     } else if (a == "component") {
                         unit.references.emplace(parse_reference(b));
@@ -109,6 +113,16 @@ namespace vm {
                         state = ParserState::TOP_LEVEL;
                     } else if(a == "entity") {
                         unit.references.emplace(parse_reference(b));
+                    }
+                    break;
+                case ParserState::PROCEDURE_DECL:
+                    if (a == "begin") {
+                        state = ParserState::PROCEDURE_BODY;
+                    }
+                    break;
+                case ParserState::PROCEDURE_BODY:
+                    if(a == "end") {
+                        state = ParserState::ARCH_DECL;
                     }
                     break;
             }
