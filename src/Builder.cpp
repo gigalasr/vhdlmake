@@ -39,7 +39,7 @@ namespace vm {
 
     std::string Builder::cmd_run(const std::string& entity) {
         std::stringstream stream;
-        stream << "ghdl -r --std=08 " << entity << " --vcd=" << C_VCD_DIRECTORY << "/" << entity << ".vcd";
+        stream << "ghdl -r --std=08 " << entity << " --wave=" << C_VCD_DIRECTORY << "/" << entity << ".ghw";
         return stream.str();
     }
 
